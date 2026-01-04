@@ -6,8 +6,13 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
+  const hasDatabaseUrl = Boolean(process.env.DATABASE_URL);
+
   let products: any[] = [];
   try {
+    if (!hasDatabaseUrl) {
+      console.warn("DATABASE_URL is not set; rendering home page without products.");
+    } else {
     products = await prisma.product.findMany({
       select: {
         product_id: true,
@@ -25,6 +30,7 @@ export default async function Home() {
       orderBy: { product_id: "desc" },
       take: 100,
     });
+    }
   } catch (e) {
     // Allows builds (and the page) to render even if the DB isn't reachable yet.
     // This commonly happens on deployment when DATABASE_URL isn't configured.
