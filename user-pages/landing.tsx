@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { StaticImageData } from "next/image";
 
@@ -25,8 +26,16 @@ import Header from "../app/common/Header";
 import Footer from "../app/common/Footer";
 import ProductGrid from "@/components/user-components/product-components/ProductGrid";
 import type { ProductCard } from "@/app/products/[id]/types";
+import { ShieldUser, Truck, Wrench } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 import {
   Select,
   SelectContent,
@@ -44,9 +53,9 @@ export default function Landing({
   carModels,
   years,
 }: LandingClientProps) {
+  const router = useRouter();
   const [currentSlide, setCurrentSlide] = useState<number>(0);
   const [showAllCategories, setShowAllCategories] = useState<boolean>(false);
-  const [currentBrandSlide, setCurrentBrandSlide] = useState<number>(0);
 
   const [selectedMake, setSelectedMake] = useState<string>("");
   const [selectedModel, setSelectedModel] = useState<string>("");
@@ -88,28 +97,21 @@ export default function Landing({
     return () => clearInterval(timer);
   }, [slideImages.length]);
 
-  useEffect(() => {
-    const brandTimer = setInterval(() => {
-      setCurrentBrandSlide((prev) => (prev + 1) % Math.ceil(brands.length / 6));
-    }, 3000);
-    return () => clearInterval(brandTimer);
-  }, [brands.length]);
-
   const nextSlide = (): void => setCurrentSlide((prev) => (prev + 1) % slideImages.length);
   const prevSlide = (): void =>
     setCurrentSlide((prev) => (prev - 1 + slideImages.length) % slideImages.length);
 
   const handleSearch = async (): Promise<void> => {
     const q = new URLSearchParams();
-    if (selectedModel) q.set("car_model", selectedModel);
+    if (selectedModel) q.set("model_id", selectedModel);
     if (selectedYear) q.set("year", selectedYear);
-    console.log("Demo search (no backend):", q.toString());
+    router.push(`/products?${q.toString()}`);
   };
 
   const displayedCategories = showAllCategories ? categories : categories.slice(0, 10);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background  mx-auto">
       <Header />
       <section className="relative w-full h-screen overflow-hidden">
         <img
@@ -118,7 +120,7 @@ export default function Landing({
           className="absolute inset-0 w-full h-[500px] object-cover z-0 blur-sm"
         />
 
-        <div className="relative z-10 flex justify-center items-center h-full px-4 pb-35">
+        <div className="relative flex flex-col justify-center items-center h-full bg-opacity-50">
           <div className="p-10">
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold mb-2 text-primary-foreground drop-shadow-sm">
@@ -222,11 +224,28 @@ export default function Landing({
               </div>
             </div>
           </div>
+          <section className="py-12 px-4 bg-transparent flex flex-row w-[1270px] h-[100px] mx-auto">
+            <div className="grid grid-cols-3 gap-6 w-full justify-center text-center  h-[100px]">
+              <div className="bg-white rounded-lg shadow-md p-4">
+                <ShieldUser />
+                Services
+              </div>
+              <div className="bg-white rounded-lg shadow-md p-4">
+                <Truck />
+                Shipping
+              </div>
+              <div className="bg-white rounded-lg shadow-md p-4">
+                <Wrench />
+                Support
+              </div>
+            </div>
+          </section>
         </div>
       </section>
+   
 
       <section className="py-12 px-4">
-        <div className="w-[1300px] mx-auto">
+        <div className="w-[1270px] mx-auto">
           <div className="flex justify-between items-center mb-8">
             <h2 className="text-2xl font-bold ">CATEGORIES</h2>
           </div>
@@ -234,11 +253,10 @@ export default function Landing({
           <div className="grid grid-cols-5 gap-4">
             {displayedCategories.map((category) => {
               const icon = iconMap[category.name] || "📦";
-
               return (
                 <Link
                   key={category.id}
-                  href={`/products?category=${encodeURIComponent(category.name)}`}
+                  href={`/products/category/${encodeURIComponent(category.name)}`}
                   className="px-4 py-3 rounded-lg flex items-center space-x-2 font-medium hover:scale-105 transition-all duration-200 hover:shadow-lg transform bg-primary-container text-primary-container-foreground"
                 >
                   <div className="w-6 h-6 bg-white rounded flex items-center justify-center text-lg">
@@ -262,49 +280,40 @@ export default function Landing({
       </section>
 
       <section id="brands" className="py-12 px-4 bg-transparent">
-        <div className="w-[1300px] mx-auto">
+        <div className="w-[1270px] mx-auto ">
           <h2 className="text-2xl font-bold text-justify mb-8">TRUSTED BRANDS</h2>
 
-          <div className="relative overflow-hidden">
-            <div className="flex transition-transform duration-700 ease-in-out" style={{ transform: `translateX(-${currentBrandSlide * 100}%)` }}>
-              {Array.from({ length: Math.ceil(brands.length / 6) }).map((_, slideIndex) => (
-                <div key={slideIndex} className="w-full shrink-0">
-                  <div className="grid grid-cols-6 gap-6">
-                    {brands.slice(slideIndex * 6, (slideIndex + 1) * 6).map((brand, index) => (
-                      <div
-                        key={index}
-                        className="p-4 rounded-lg hover:shadow-lg transition-all duration-300 hover:scale-105 flex items-center justify-center bg-primary-foreground text-surface-foreground"
-                        style={{ animation: `fadeInUp 0.5s ease-out ${index * 0.1}s both` }}
-                      >
-                        <img
-                          src={(brand.logo as StaticImageData).src}
-                          alt={brand.name}
-                          className="h-12 w-auto object-contain grayscale hover:grayscale-0 transition-all duration-300"
-                        />
-                      </div>
-                    ))}
+          <Carousel opts={{ align: "start", loop: true }} className="w-[1200px] mx-auto relative">
+            <CarouselContent className="-ml-6">
+              {brands.map((brand) => (
+                <CarouselItem
+                  key={brand.name}
+                  className="pl-6 basis-full sm:basis-1/2 lg:basis-1/3"
+                >
+                  <div className="p-4 rounded-lg hover:shadow-lg transition-all duration-300 hover:scale-105 flex items-center justify-center bg-primary-foreground text-surface-foreground">
+                    <img
+                      src={(brand.logo as StaticImageData).src}
+                      alt={brand.name}
+                      className="h-18 w-auto object-contain grayscale hover:grayscale-0 transition-all duration-300"
+                    />
                   </div>
-                </div>
+                </CarouselItem>
               ))}
-            </div>
+            </CarouselContent>
 
-            <div className="flex justify-center mt-6 space-x-2">
-              {Array.from({ length: Math.ceil(brands.length / 6) }).map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentBrandSlide(index)}
-                  className={`w-2 h-2 rounded-full transition-colors ${index === currentBrandSlide ? "bg-primary-container" : "bg-gray-300"}`}
-                />
-              ))}
-            </div>
-          </div>
+            <CarouselPrevious />
+            <CarouselNext />
+          </Carousel>
         </div>
       </section>
 
       <section>
         <div className="max-w-full mx-auto flex justify-center items-center flex-col">
-          <h2 className="text-2xl font-bold  text-justify mb-8">Discovery</h2>
-          <ProductGrid initialProducts={initialProducts} />
+          <div className="w-[1270px] h-12 bg-white rounded-lg shadow-md mb-4 border-b-2 border-primary flex justify-center items-center">
+            <h2 className="text-2xl font-bold  text-center ">Explore </h2>
+          </div>
+          
+          <ProductGrid initialProducts={initialProducts} showMoreButton={true} columns={5} />
         </div>
       </section>
 

@@ -261,13 +261,13 @@ export default function ProductDetailPage(): JSX.Element {
                 <div className="flex items-center gap-2">
                   {discount && discount > 0 ? (
                     <>
-                      <Badge variant="primary" className="text-sm font-bold">
+                      <Badge variant="primary" className="text-lg font-bold">
                         ₱{(product.selling_price * (1 - discount / 100)).toFixed(2)}
                       </Badge>
-                      <span className="text-xs text-muted line-through">₱{Number(product.selling_price).toFixed(2)}</span>
+                      <span className="text-lg text-muted line-through">₱{Number(product.selling_price).toFixed(2)}</span>
                     </>
                   ) : (
-                    <Badge variant="primary" className="text-sm font-bold">₱{Number(product.selling_price).toFixed(2)}</Badge>
+                    <Badge variant="primary" className="text-lg font-bold">₱{Number(product.selling_price).toFixed(2)}</Badge>
                   )}
                 </div>
               </div>
